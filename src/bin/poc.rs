@@ -46,6 +46,36 @@
 // //         Box::pin(async move { Some(T::from_request(req).await) })
 // //     }
 // // }
+use std::collections::HashMap;
+pub trait Execute {
+    fn execute(&self);
+}
+pub trait Register<T>
+where
+    T: Execute,
+{
+    fn register(&self, name: &str, task: T);
+}
+pub struct TaskGraph<T: Execute> {
+    tasks: HashMap<String, T>,
+}
+
+impl<T: Execute> Register<T> for TaskGraph<T> {
+    fn register(&self, name: &str, task: T) {
+        unimplemented!()
+    }
+}
+impl<T: Execute> Execute for TaskGraph<T> {
+    fn execute(&self) {
+        // task.execute();
+    }
+}
+
+pub struct Task {}
+
+impl Execute for Task {
+    fn execute(&self) {}
+}
 
 #[tokio::main]
 async fn main() {}
