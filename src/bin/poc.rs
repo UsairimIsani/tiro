@@ -26,19 +26,20 @@ impl<T: Execute> Execute for TaskGraph<T> {
     }
 }
 
-pub struct Task
-// where
-// T: FnOnce(),
+pub struct Task<T>
+where
+    T: Fn(),
 {
-    func: Box<dyn Fn()>,
+    func: Box<T>,
 }
-impl Task {
-    pub fn new(func: Box<dyn Fn()>) -> Self {
+impl<T: Fn()> Task<T> {
+    pub fn new(func: T) -> Self {
+        let func = Box::new(func);
         Task { func }
     }
 }
 
-impl Execute for Task {
+impl<T: Fn()> Execute for Task<T> {
     type Item = Self;
     fn execute(self) -> Self::Item {
         (self.func)();
