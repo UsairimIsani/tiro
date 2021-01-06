@@ -1,7 +1,7 @@
 use crate::prelude::{Execute, Register};
-use std::collections::HashMap; // Will Be swapped with evmap or something else ?
+unsafe impl<T: Execute> Send for TaskGraph<T> {}
 pub struct TaskGraph<T: Execute> {
-    pub tasks: HashMap<String, T>, // For the time being
+    pub tasks: ReadHandle<String, T>, // For the time being
 }
 
 impl<T: Execute> Register<T> for TaskGraph<T> {
@@ -9,9 +9,12 @@ impl<T: Execute> Register<T> for TaskGraph<T> {
         unimplemented!()
     }
 }
+use async_trait::async_trait;
+use evmap::ReadHandle;
+#[async_trait]
 impl<T: Execute> Execute for TaskGraph<T> {
     type Item = Self;
-    fn execute(self) -> Self::Item {
+    async fn execute(self) -> Self::Item {
         // task.execute();
         self
     }

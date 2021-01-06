@@ -1,6 +1,8 @@
+use async_trait::async_trait;
+#[async_trait]
 pub trait Execute {
     type Item;
-    fn execute(self) -> Self::Item;
+    async fn execute(self) -> Self::Item;
 }
 pub trait Register<T>
 where
