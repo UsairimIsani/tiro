@@ -1,18 +1,59 @@
-use crate::prelude::{Execute, Register};
-unsafe impl<T: Execute> Send for TaskGraph<T> {}
-pub struct TaskGraph<T: Execute> {
-    pub tasks: ReadHandle<String, T>, // For the time being
+use async_trait::async_trait;
+use evmap::{ReadHandle, WriteHandle};
+
+use crate::prelude::*;
+
+unsafe impl<T, K> Send for TaskGraph<T, K>
+where
+    K: TaskName,
+    T: TaskExt,
+{
+}
+pub struct TaskGraph<T, K>
+where
+    K: TaskName,
+    T: TaskExt,
+{
+    tasks: (ReadHandle<K, T>, WriteHandle<K, T>), // For the time being
+    schemes: Vec<Scheme<K>>,
 }
 
-impl<T: Execute> Register<T> for TaskGraph<T> {
-    fn register(self, _name: &str, _task: T) {
-        unimplemented!()
+impl<T, K> TaskGraph<T, K>
+where
+    K: TaskName,
+    T: TaskExt,
+{
+    pub fn new() -> Self {
+        let map = evmap::new();
+        Self {
+            tasks: map,
+            schemes: Vec::new(),
+        }
+    }
+    pub fn add_scheme(mut self, scheme: Scheme<K>) -> Self {
+        self.schemes.push(scheme);
+        self
     }
 }
-use async_trait::async_trait;
-use evmap::ReadHandle;
+
+impl<T, K> Register<T, K> for TaskGraph<T, K>
+where
+    K: TaskName,
+    T: TaskExt,
+{
+    type Item = Self;
+    fn register(mut self, name: K, task: T) -> Self {
+        self.tasks.1.insert(name, task);
+        self
+    }
+}
+
 #[async_trait]
-impl<T: Execute> Execute for TaskGraph<T> {
+impl<T, K> Execute for TaskGraph<T, K>
+where
+    K: TaskName,
+    T: TaskExt,
+{
     type Item = Self;
     async fn execute(self) -> Self::Item {
         // task.execute();
