@@ -6,13 +6,11 @@ pub trait Execute {
     type Item;
     async fn execute(self) -> Self::Item;
 }
-pub trait Register<T, K>
-where
-    T: TaskExt,
-    K: TaskName,
+pub trait Register<T, K> // T: TaskExt,
+// K: TaskName,
 {
     type Item;
-    fn register(self, name: K, task: T) -> Self::Item;
+    fn register(self, name: K, task: Box<T>) -> Self::Item;
 }
-pub trait TaskName: Hash + Eq + Clone + ShallowCopy {}
-pub trait TaskExt: Execute + Eq + Clone + ShallowCopy + Hash {}
+pub trait TaskName: Hash + PartialEq + Eq {}
+pub trait TaskExt: Execute {}

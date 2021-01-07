@@ -1,5 +1,7 @@
-use crate::prelude::Execute;
+use crate::prelude::*;
 use async_trait::async_trait;
+use evmap::ShallowCopy;
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Task<T, R>
 where
     T: Fn() -> R,
@@ -10,8 +12,7 @@ where
 unsafe impl<T: Fn() -> R, R> Send for Task<T, R> {} // Still Unsure if this is right
 
 impl<T: Fn() -> R, R> Task<T, R> {
-    pub fn new(func: T) -> Self {
-        let func = Box::new(func);
+    pub fn new(func: Box<T>) -> Self {
         Task { func, res: None }
     }
     pub fn get_response(&mut self) -> Option<R> {
@@ -27,6 +28,8 @@ impl<T: Fn() -> R, R> Execute for Task<T, R> {
         self
     }
 }
+// impl<T, K> ShallowCopy for Task<T, K> where T: Fn() -> K {}
+// impl<T, K> TaskExt for Task<T, K> where T: Fn() -> K {}
 // use crate::prelude::Execute;
 // use async_trait::async_trait;
 // pub struct Task<T, I, R> // Need to Figure Out PhantomData?
