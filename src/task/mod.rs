@@ -1,4 +1,5 @@
 mod task;
 mod taskgraph;
 // pub use task::Task;
-pub use taskgraph::TaskGraph;
+pub use task::*;
+pub use taskgraph::*;

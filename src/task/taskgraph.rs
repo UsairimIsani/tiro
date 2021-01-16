@@ -4,7 +4,7 @@ use evmap::{ReadHandle, WriteHandle};
 use std::collections::HashMap;
 use std::hash::Hash;
 
-unsafe impl<T, K> Send for TaskGraph<K, T> where K: Hash + PartialEq + Eq // T: Execute,,,,
+unsafe impl<T, K> Send for TaskGraph<K, T> where K: Hash + PartialEq + Eq // T: Execute,,,,,,
 {
 }
 #[derive(Debug)]
