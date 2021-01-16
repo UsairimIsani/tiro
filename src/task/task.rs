@@ -110,18 +110,16 @@
 //     pub fn parallel() {}
 // }
 
-// mod tests {
+mod tests {
 
-//     #[tokio::test]
-//     async fn test_task_chain() {
-//         let task1 = Task::new(async {
-//             2
-//         });
-//         let task2 = Task::new(async {
-//             3
-//         })
+    #[tokio::test]
+    async fn test_task_chain() {
+        let task1 = Task::new(async { 2 });
+        let task2 = Task::new(async {
+            let r = task1.get_result().await;
+            r + 3
+        });
 
-//         let task3 = task1.chain(task2);
-
-//     }
-// }
+        let task3 = task1.chain(task2);
+    }
+}
