@@ -137,53 +137,59 @@ mod test {
         Ok(())
     }
 
+    // Not what i hoped to achieve
     #[tokio::test]
     async fn test_parallel_and_chained() -> anyhow::Result<()> {
         use super::*;
         use tokio::time::{sleep, Duration};
         let a = Task::new(async {
+            // let _ = sleep(Duration::from_secs(1)).await;
             println!("I am Task 1");
         });
 
         let b = Task::new(async {
+            // let _ = sleep(Duration::from_secs(3)).await;
             println!("I am Task 2");
         });
 
         let c = Task::new(async {
+            // let _ = sleep(Duration::from_secs(2)).await;
             println!("I am Task 3");
         });
         let d = Task::new(async {
+            // let _ = sleep(Duration::from_secs(5)).await;
             println!("I am Task 4");
         });
 
         let e = Task::new(async {
+            // let _ = sleep(Duration::from_secs(4)).await;
             println!("I am Task 5");
         });
 
         let f = Task::new(async {
+            // let _ = sleep(Duration::from_secs(6)).await;
             // block_on(a.fut).unwrap();
             println!("I am Task 6");
         });
 
-        // a.chain(c)
-        //     .await?
-        //     .chain(b)
-        //     .await?
-        //     .and(e)
-        //     .and(f)
-        //     .await
-        //     .chain(d)
-        //     .await?
-        //     .execute()
-        //     .await?;
-        // println!(
-        //     r#"
-        //      task1 -> task3 -> task2 -> task5 -> task4
-        //                               \ task6 /
+        a.chain(c)
+            .await?
+            .chain(b)
+            .await?
+            .and(e)
+            .and(f)
+            .await
+            .chain(d)
+            .await?
+            .execute()
+            .await?;
+        println!(
+            r#"
+             task1 -> task3 -> task2 -> task5 -> task4
+                                      \ task6 /
 
-        //                               "#
-        // );
-        let _ = f.and(a).execute().await.unwrap();
+                                      "#
+        );
         Ok(())
     }
 }
