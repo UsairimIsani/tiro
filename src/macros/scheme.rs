@@ -4,14 +4,14 @@ use crate::prelude::*;
 #[macro_export]
 macro_rules! create_scheme {
     ($($key: expr => [ $($val:expr),* ] ),*) => {{
-        use crate::prelude::*;
+        use super::*;
         use std::collections::{HashSet,HashMap};
         let mut scheme: Scheme<&str> = Scheme::new();
 
         $(
             let mut temp = HashMap::new();
             let mut upstream: HashSet<&str> = HashSet::new();
-            let mut downstream: HashSet<&str> = HashSet::new();
+            let downstream: HashSet<&str> = HashSet::new();
             $(
                 upstream.insert($val);
                 temp.insert($val, $key);
