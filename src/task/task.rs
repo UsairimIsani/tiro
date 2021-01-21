@@ -1,125 +1,186 @@
-// use std::marker::PhantomData;
+use futures::{channel::mpsc::unbounded, executor::block_on, future::join_all, prelude::*};
+use std::future::Future;
 
-// use crate::prelude::*;
-// use async_trait::async_trait;
-// use evmap::ShallowCopy;
-// use futures::Future;
-// // #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-// // pub struct Task<F, I, O> {
-// //     func: F,
-// //     res: Option<O>,
-// //     inp: Option<I>,
-// //     // _phantom: PhantomData<I>,
-// // }
-// // unsafe impl<F, I, O> Send for Task<F, I, O> {} // Still Unsure if this is right
+use tokio::task::JoinHandle;
+pub struct Task {
+    fut: JoinHandle<()>,
+}
+impl Task
+// F::Output: Send + 'static,
+{
+    pub fn new<F>(fut: F) -> Self
+    where
+        F: Future<Output = ()> + Send + 'static,
+    {
+        let handle = tokio::spawn(fut);
+        Self { fut: handle }
+    }
+    pub async fn execute(self) -> anyhow::Result<()> {
+        self.fut.await?;
+        Ok(())
+    }
 
-// // impl<F, I, O> Task<F, I, O>
-// // where
-// //     F: Future + Send + 'static,
-// //     O: Send + 'static,
-// //     I: Send + 'static,
-// // {
-// //     pub fn new(func: F) -> Self {
-// //         Task {
-// //             func,
-// //             res: None,
-// //             inp: None,
-// //         }
-// //     }
-// //     pub fn get_response(&mut self) -> Option<O> {
-// //         self.res.take()
-// //     }
-// //     fn chain<CR, T>(self, func: F) -> Task<CR>
-// //     where
-// //         T: Future<Output = CR> + Send + 'static,
-// //         // F: FnOnce(R) -> CR + Send + 'static,
-// //         CR: Send + 'static,
-// //         R: Send + 'static,
-// //     {
-// //         // let val = tokio::spawn(async { func(self.val) }).await.unwrap();
-// //         Chainable { val }
-// //     }
-// // }
+    pub async fn chain(self, other: Task) -> anyhow::Result<Self> {
+        self.fut
+            .await
+            .and_then(|_x| Ok(Task { fut: other.fut }))
+            .map_err(|e| anyhow::Error::from(e))
+    }
 
-// // #[async_trait]
-// // impl<F, I, O> Execute for Task<F, I, O>
-// // where
-// //     F: Fn(Option<I>) -> O,
-// // {
-// //     type Item = Self;
-// //     async fn execute(mut self) -> Self::Item {
-// //         self.res = Some((self.func)(self.inp.take()));
-// //         self
-// //     }
-// // }
+    pub fn and(self, other: Task) -> And {
+        let queue = vec![self.fut, other.fut];
+        And { queue }
+    }
+}
 
-// // pub struct Chainable<R> {
-// //     val: R,
-// // }
+pub struct And {
+    queue: Vec<JoinHandle<()>>,
+}
 
-// // impl<R> Chainable<R> {
-// //     pub async fn chain<CR, F>(self, func: F) -> Chainable<CR>
-// //     where
-// //         // F: Future<Output = CR> + Send + 'static,
-// //         F: FnOnce(R) -> CR + Send + 'static,
-// //         CR: Send + 'static,
-// //         R: Send + 'static,
-// //     {
-// //         let val = tokio::spawn(async { func(self.val) }).await.unwrap();
-// //         Chainable { val }
-// //     }
+impl And {
+    pub async fn and(mut self, other: Task) -> And {
+        self.queue.push(other.fut);
+        self
+    }
+    pub async fn chain(self, other: Task) -> anyhow::Result<Task> {
+        join_all(self.queue).await;
 
-// //     pub fn end(self) -> R {
-// //         self.val
-// //     }
-// // }
+        Ok(Task { fut: other.fut })
+    }
 
-// // impl<R> std::ops::Deref for Chainable<R> {
-// //     type Target = R;
+    pub async fn execute(self) -> anyhow::Result<()> {
+        join_all(self.queue).await;
+        Ok(())
+    }
+}
+mod test {
 
-// //     fn deref(&self) -> &R {
-// //         &self.val
-// //     }
-// // }
-// // mod tests {
-// //     use super::Chainable;
+    #[tokio::test]
+    async fn test_new_tasks() {
+        use super::*;
+        use futures::future::join_all;
+        use tokio::time::{sleep, Duration};
 
-// //     #[tokio::test]
-// //     async fn test_chain() {
-// //         let a: Chainable<i32> = Chainable { val: 1 };
-// //         let b: Chainable<i32> = a.chain(|s| s + 12).await;
-// //         let b = b.chain(|x| x + 2).await;
+        let a = Task::new(async {
+            let _ = sleep(Duration::from_secs(2)).await;
+            println!("I am Task 1");
+        });
 
-// //         assert_eq!(15, b.val);
-// //     }
-// // }
+        let b = Task::new(async {
+            let _ = sleep(Duration::from_secs(1)).await;
+            println!("I am Task 2");
+        });
+        let v = vec![a.execute(), b.execute()];
+        // tokio::join!(a.execute(), b.execute());
+        join_all(v).await;
 
-// pub struct Task<F, I, O> {
-//     f: F,
-//     inp: I,
-//     out: O,
-// }
+        println!("Should Print Task 2 first and Task1 Later");
 
-// impl<F, I, O> Task<F, I, O> {
-//     pub fn chain(self,t: F) {
+        assert!(true)
+    }
 
-//         Task{
+    #[tokio::test]
+    async fn test_single_task() {
+        use super::*;
+        let _ = Task::new(async {
+            println!("I am Single Task");
+        })
+        .execute()
+        .await;
+    }
 
-//         }
-//     }
-//     pub fn parallel() {}
-// }
+    #[tokio::test]
+    async fn test_chained_tasks() -> anyhow::Result<()> {
+        use super::*;
+        let a = Task::new(async {
+            println!("I am Task 1");
+        });
 
-mod tests {
+        let b = Task::new(async {
+            println!("I am Task 2");
+        });
 
-    // #[tokio::test]
-    // async fn test_task_chain() {
-    //     let task1 = Task::new(async { 2 });
-    //     let task2 = Task::new(async {
-    //         let r = task1.get_result().await;
-    //         r + 3
-    //     });
+        let c = Task::new(async {
+            println!("I am Task 3");
+        });
 
-    //     let task3 = task1.chain(task2);
-    // }
+        println!("Should Print Task 1 , 3, 2 Later");
+
+        a.chain(c).await?.chain(b).await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_parallel_task() -> anyhow::Result<()> {
+        use super::*;
+        use tokio::time::{sleep, Duration};
+        let a = Task::new(async {
+            println!("I am Task 1");
+        });
+
+        let b = Task::new(async {
+            let _ = sleep(Duration::from_secs(2)).await;
+            println!("I am Task 2");
+        });
+
+        let c = Task::new(async {
+            println!("I am Task 3");
+        });
+
+        b.and(a).and(c).await.execute().await?;
+
+        println!("Should Print 1,3 and after 2 seconds 3");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_parallel_and_chained() -> anyhow::Result<()> {
+        use super::*;
+        use tokio::time::{sleep, Duration};
+        let a = Task::new(async {
+            println!("I am Task 1");
+        });
+
+        let b = Task::new(async {
+            println!("I am Task 2");
+        });
+
+        let c = Task::new(async {
+            println!("I am Task 3");
+        });
+        let d = Task::new(async {
+            println!("I am Task 4");
+        });
+
+        let e = Task::new(async {
+            println!("I am Task 5");
+        });
+
+        let f = Task::new(async {
+            println!("I am Task 6");
+        });
+
+        a.chain(c)
+            .await?
+            .chain(b)
+            .await?
+            .and(e)
+            .and(f)
+            .await
+            .chain(d)
+            .await?
+            .execute()
+            .await?;
+        println!(
+            r#"
+             task1 -> task3 -> task2 -> task5 -> task4  
+                                      \ task6 /
+
+                                      "#
+        );
+
+        Ok(())
+    }
 }

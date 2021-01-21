@@ -1,3 +1,4 @@
+// pub use macros::scheme::create_scheme;
 use crate::prelude::*;
 
 #[macro_export]
@@ -28,13 +29,6 @@ macro_rules! create_scheme {
     };
 
 }
-// map {
-//  task1 => task2,
-//  sdf => task2,
-//  task2 => task3
-//  task2 => task4,
-//  task3 => task4
-// }
 
 mod tests {
     #[test]
