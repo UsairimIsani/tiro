@@ -116,6 +116,7 @@ mod test {
         use super::*;
         use tokio::time::{sleep, Duration};
         let a = Task::new(async {
+            let _ = sleep(Duration::from_secs(1)).await;
             println!("I am Task 1");
         });
 
@@ -125,6 +126,7 @@ mod test {
         });
 
         let c = Task::new(async {
+            let _ = sleep(Duration::from_secs(1)).await;
             println!("I am Task 3");
         });
 
@@ -159,28 +161,29 @@ mod test {
         });
 
         let f = Task::new(async {
+            // block_on(a.fut).unwrap();
             println!("I am Task 6");
         });
 
-        a.chain(c)
-            .await?
-            .chain(b)
-            .await?
-            .and(e)
-            .and(f)
-            .await
-            .chain(d)
-            .await?
-            .execute()
-            .await?;
-        println!(
-            r#"
-             task1 -> task3 -> task2 -> task5 -> task4  
-                                      \ task6 /
+        // a.chain(c)
+        //     .await?
+        //     .chain(b)
+        //     .await?
+        //     .and(e)
+        //     .and(f)
+        //     .await
+        //     .chain(d)
+        //     .await?
+        //     .execute()
+        //     .await?;
+        // println!(
+        //     r#"
+        //      task1 -> task3 -> task2 -> task5 -> task4
+        //                               \ task6 /
 
-                                      "#
-        );
-
+        //                               "#
+        // );
+        let _ = f.and(a).execute().await.unwrap();
         Ok(())
     }
 }
