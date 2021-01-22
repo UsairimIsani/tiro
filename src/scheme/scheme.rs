@@ -10,8 +10,6 @@ pub struct Scheme<K>
 where
     K: Hash + Eq,
 {
-    // last: Option<K>,
-    // first: Option<K>,
     inner: HashMap<K, Dependencies<K>>,
 }
 
@@ -21,8 +19,6 @@ where
 {
     pub fn new() -> Self {
         Self {
-            // last: None,
-            // first: None,
             inner: HashMap::new(),
         }
     }

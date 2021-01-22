@@ -1,7 +1,7 @@
 // use crate::prelude::*;
 
 // use async_trait::async_trait;
-// // use evmap::{ReadHandle, WriteHandle};
+// // // use evmap::{ReadHandle, WriteHandle};
 // use std::collections::HashMap;
 // use std::hash::Hash;
 
@@ -10,13 +10,12 @@
 // #[derive(Debug)]
 // pub struct TaskGraph<K, T>
 // where
-//     K: Hash + PartialEq + Eq,
-//     // T: Execute,
+// //     K: Hash + PartialEq + Eq,
+// //     // T: Execute,
 // {
-//     // tasks: (ReadHandle<K, T>, WriteHandle<K, T>),
-//     // For the time being
 //     tasks: HashMap<K, T>,
 //     schemes: Vec<Scheme<K>>,
+//     //     // queue:
 // }
 
 // impl<T, K> TaskGraph<K, T>
@@ -71,3 +70,7 @@
 //         let task_graph: TaskGraph<&str, Task<()>> = TaskGraph::new();
 //     }
 // }
+
+// // initialize task
+// // put in the already declared taskgraph
+// // pushing that into

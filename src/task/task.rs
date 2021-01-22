@@ -192,4 +192,16 @@ mod test {
         );
         Ok(())
     }
+    // I would say no?
+    // Would it be possible to add in data into a set of hashmaps? //
+    // Like, one saying what's required to move to the next stage // Scheme Dependencies part downstream,
+    // Another explaining a count for the number of prior tasks for a given stage//(task) Scheme Dependencies part upstream
+    // The 3rd would be a string and generic and would hold data to send onto the next Fn// Problem Here is if The val is used then all the HashMap would be of the same type
+    // Then you'd send the data in together
+    // Likely in a local hashmap explaining where the data just came from// task scheme Dependency Struct
+    // The channel itself would only recieve signal that a pathway is finished and will commission another parallel path to run if requirements are met
+    // Which could allow for that?
+    // No idea
+    // I seriously haven't been doing Rust all too much
+    // I know the details are rougher than imagination
 }
